@@ -86,6 +86,8 @@ Windows 对应 `start-windows.bat crawler`。每次导入结束后刷新视频�
 
 平台要求登录时，将自己合法取得的 Netscape 格式 Cookie 文件放在 `.secrets` 内，并设置 `cookies_file`；默认不会自动读取浏览器 Cookie。不要将文件、授权回调、令牌或完整错误页面提交到 Git。
 
+完整的 agent 提示词、手动加站步骤和适配器字段约定见 [README：特殊模式](README.md#3-特殊模式部署后手动增加站点)。公开包没有成人站点或成人爬虫。
+
 只有明确要求特殊模式时，agent 才应安装用户指定并审查过的本地适配器。可参考 `special_plugin.example.py` 的接口，把实现放到忽略的 `private/provider.py`，再设置：
 
 ```json
