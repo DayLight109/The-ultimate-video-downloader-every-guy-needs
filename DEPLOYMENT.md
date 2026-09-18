@@ -56,7 +56,7 @@ Windows 对应 `start-windows.bat crawler`。每次导入结束后刷新视频�
 
 ## FFmpeg 与云存储
 
-直接播放兼容的单文件视频不一定需要 FFmpeg；分离音视频、HLS 合并及相关缓存操作需要 `ffmpeg`，诊断也会检查 `ffprobe`。Windows 用户安装 FFmpeg 后，把其 `bin` 目录加入 PATH。
+直接播放兼容的单文件视频不一定需要 FFmpeg；分离音视频、HLS 合并及相关缓存操作需要 `ffmpeg` 和 `ffprobe`。合并前先检测音频编码；AAC 使用 `aac_adtstoasc` 转换封装所需的头信息，其他编码不会套用 AAC 过滤器，全程保持音视频流复制。Windows 用户安装 FFmpeg 后，把其 `bin` 目录加入 PATH。
 
 云盘缓存是可选功能。默认未启用，在未配置时点击缓存会提示配置，不会使用系统的既有授权。
 

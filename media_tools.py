@@ -3,6 +3,7 @@ from urllib.parse import urlsplit
 
 
 def command(source):
+    from cache_transfer import remux_audio_filters
     result = ['ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'error']
     urls = [source['url']]
     if source.get('audio_url'):
@@ -19,6 +20,7 @@ def command(source):
             result += ['-headers', f'Referer: {referer}\r\n']
         result += ['-i', url]
     result += ['-map', '0:v:0', '-map', '1:a:0' if len(urls) > 1 else '0:a:0?',
-               '-c', 'copy', '-movflags', '+frag_keyframe+empty_moov+default_base_moof',
+               '-c', 'copy', *remux_audio_filters(source),
+               '-movflags', '+frag_keyframe+empty_moov+default_base_moof',
                '-progress', 'pipe:2', '-nostats', '-f', 'mp4', 'pipe:1']
     return result

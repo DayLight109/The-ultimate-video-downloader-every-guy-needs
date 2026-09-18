@@ -389,6 +389,31 @@ class TransferTest(unittest.TestCase):
                      open_source=server.open_stream_upstream, report=lambda _info: None)
         self.assertFalse(list(self.remote.rglob('*.mp4')))
 
+    def test_hls_audio_remux_handles_adts_aac_and_preserves_other_codecs(self):
+        media = self.root / 'source-audio'
+        media.mkdir()
+        for codec, encoder in [('aac', 'aac'), ('mp3', 'libmp3lame')]:
+            folder = media / codec
+            folder.mkdir()
+            subprocess.run(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'testsrc2=s=160x90:r=12:d=2',
+                            '-f', 'lavfi', '-i', 'sine=frequency=440:duration=2',
+                            '-c:v', 'libx264', '-threads', '1', '-g', '12', '-c:a', encoder,
+                            '-f', 'hls', '-hls_time', '1', str(folder / 'index.m3u8')], check=True)
+        base = self.serve(functools.partial(SimpleHTTPRequestHandler, directory=str(media)))
+        for codec in ('aac', 'mp3'):
+            with self.subTest(codec=codec):
+                result = transfer('test', codec, 'HLS audio sample',
+                    resolve=lambda *_a, **_k: {'url': base + '/' + codec + '/index.m3u8', 'kind': 'hls'},
+                    open_source=server.open_stream_upstream, report=lambda _info: None, duration=2)
+                target = self.remote / 'raw/test' / result['raw_name']
+                probe = json.loads(subprocess.check_output(['ffprobe', '-v', 'error', '-show_streams', '-of', 'json', str(target)]))
+                self.assertEqual(['h264', codec], [row['codec_name'] for row in probe['streams']])
+                decoded = subprocess.run(['ffmpeg', '-v', 'error', '-i', str(target), '-f', 'null', '-'],
+                                         capture_output=True, timeout=20)
+                self.assertEqual(0, decoded.returncode, decoded.stderr.decode())
+                self.assertEqual(b'', decoded.stderr)
+                self.assertFalse(list((self.remote / 'raw/test').glob('*.part')))
+
     def test_hls_becomes_one_playable_mp4_without_transcoding(self):
         media = self.root / 'source'
         media.mkdir()

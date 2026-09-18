@@ -158,6 +158,40 @@ def remote_reader(remote, offset, count):
             _read_slots.release()
 
 
+def remux_audio_filters(source):
+    """Only AAC needs ADTS headers converted before fragmented MP4 muxing.
+
+    Probe one audio stream with bounded analysis; forcing the AAC filter onto
+    MP3 or other audio codecs would reject otherwise valid HLS sources.
+    """
+    url = source.get('audio_url') or source['url']
+    if urllib.parse.urlsplit(url).scheme not in ('http', 'https'):
+        raise TransferError('音频检测仅支持 HTTP/HTTPS 来源', retryable=False)
+    command = ['ffprobe', '-v', 'error', '-rw_timeout', '10000000',
+               '-analyzeduration', '2000000', '-probesize', '1048576',
+               '-user_agent', 'Mozilla/5.0',
+               '-protocol_whitelist', 'http,https,tcp,tls,crypto,data']
+    referer = str(source.get('referer') or '')
+    if '\r' in referer or '\n' in referer:
+        raise TransferError('无效的来源请求头', retryable=False)
+    if referer:
+        command += ['-headers', f'Referer: {referer}\r\n']
+    command += ['-select_streams', 'a:0', '-show_entries', 'stream=codec_name',
+                '-of', 'json', '-i', url]
+    try:
+        result = subprocess.run(command, capture_output=True, timeout=20)
+    except subprocess.TimeoutExpired as exc:
+        raise TransferError('源站音频格式检测超时，请稍后重试') from exc
+    if result.returncode:
+        raise TransferError('源站音频格式检测失败：' + safe_error(result.stderr.decode('utf-8', errors='replace')))
+    try:
+        streams = json.loads(result.stdout).get('streams', [])
+        codec = streams[0]['codec_name'] if streams else None
+    except (ValueError, TypeError, KeyError, IndexError, AttributeError) as exc:
+        raise TransferError('无法确定源站音频编码') from exc
+    return ['-bsf:a', 'aac_adtstoasc'] if codec == 'aac' else []
+
+
 def transfer(site, code, title, *, resolve, open_source, report, duration=0, checkpoint=None):
     remote = os.environ.get('CACHE_REMOTE', '').rstrip('/')
     if not remote:
