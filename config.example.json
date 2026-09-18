@@ -1,0 +1,11 @@
+{
+  "mode": "ordinary",
+  "sources": [],
+  "max_items_per_source": 50,
+  "crawl_interval_seconds": 1800,
+  "cookies_file": "",
+  "cache_remote": "",
+  "rclone_config": "",
+  "cache_workers": 1,
+  "special_plugin": ""
+}

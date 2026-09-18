@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>导入链接 · AVTool</title>
+  </head>
+  <body>
+    <main class="import-page">
+      <a href="/">← 返回视频库</a>
+      <h1>导入视频链接</h1>
+      <p>粘贴你有权使用的 Bilibili 或抖音视频链接。导入目录后可先尝试源站播放，再手动保存到自己的云盘。</p>
+      <form id="source-form">
+        <label for="source-url">视频或受支持的合集链接</label>
+        <input id="source-url" type="url" placeholder="https://…" required maxlength="4096" autocomplete="off" />
+        <button id="submit" type="submit">导入目录</button>
+      </form>
+      <p id="status" role="status" aria-live="polite"></p>
+      <p>首次使用为空目录。抖音可能需要你自己的 Cookie；平台不提供访问权限时，导入会失败。视频不会因导入目录而自动下载。</p>
+      <a href="/?view=library">查看视频库 →</a>
+    </main>
+    <script type="module" src="/src/source-manager.js"></script>
+  </body>
+</html>
